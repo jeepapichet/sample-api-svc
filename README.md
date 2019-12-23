@@ -42,7 +42,7 @@ docker, podman are not required for this step
 ```shell script
 
 # build the image to push to docker registry
-mvn clean package jib:build -P jib-build
+mvn clean package jib:build -P jib
 
 # run the service
 kubeclt apply -f k8s/

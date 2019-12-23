@@ -183,6 +183,22 @@
                                     <jvmFlag>-ms512m</jvmFlag>
                                 </jvmFlags>
                             </container>
+                            <extraDirectories>
+                              <paths>
+                                 <path>src/main/summon-resources</path>
+                              </paths>
+                              <permissions>
+                                <permission>
+                                  <file>/usr/local/bin/summon</file>
+                                  <mode>755</mode>
+                                </permission>
+                                <permission>
+                                  <file>/usr/local/lib/summon/summon-conjur</file>
+                                  <mode>755</mode>
+                                </permission>
+                              </permissions>
+                            </extraDirectories>
+
                         </configuration>
                     </plugin>
                 </plugins>

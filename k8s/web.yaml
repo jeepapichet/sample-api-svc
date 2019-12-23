@@ -41,10 +41,80 @@ spec:
               secretKeyRef:
                 name: common-secret
                 key: custom-my-pass
-        command: ["/usr/local/bin/summon"]
+          - name: CONJUR_VERSION
+            value: "5"
+          - name: CONJUR_APPLIANCE_URL
+            value: "https://follower.dap.svc.cluster.local/api"
+          - name: CONJUR_AUTHN_URL
+            value: "https://follower.dap.svc.cluster.local/api/authn-k8s/minikube"
+          - name: CONJUR_ACCOUNT
+            value: cyberark
+          - name: CONJUR_AUTHN_TOKEN_FILE
+            value: /run/conjur/access-token
+          - name: CONJUR_VERSION
+            value: "5"
+          - name: CONJUR_SSL_CERTIFICATE
+            valueFrom:
+              configMapKeyRef:
+                name: conjur-certificate
+                key: ssl-certificate
+        command: ["/usr/local/bin/summon", "-f", "/etc/summon/secrets.yml"]
         args: ["java",
                "-ms512m",
                "-cp",
                "/app/resources:/app/classes:/app/libs/*",
                "net.vino9.sample.ResourceServerApplication"
         ]
+        volumeMounts:
+          - mountPath: /run/conjur
+            name: conjur-access-token
+            readOnly: true
+          - mountPath: /etc/summon
+            name: summon-config
+            readOnly: true
+      initContainers:
+      - name: authenticator
+        image: 'OCP_INTERNAL_REGISTRY/APP_NAME/conjur-kubernetes-authenticator:0.14.0'
+        image: minikube.local:5000/dap/conjur-kubernetes-authenticator:0.14.0
+        imagePullPolicy: Always
+        env:
+          - name: CONTAINER_MODE
+            value: init
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: CONJUR_VERSION
+            value: "5"
+          - name: CONJUR_APPLICATIONLIANCE_URL
+            value: "https://follower.dap.svc.cluster.local/api"
+          - name: CONJUR_AUTHN_URL
+            value: "https://follower.dap.svc.cluster.local/api/authn-k8s/minikube"
+          - name: CONJUR_ACCOUNT
+            value: cyberark
+          - name: CONJUR_AUTHN_LOGIN
+            value: "host/conjur/authn-k8s/minikube/apps/default/*/*"
+          - name: CONJUR_SSL_CERTIFICATE
+            valueFrom:
+              configMapKeyRef:
+                name: conjur-certificate
+                key: ssl-certificate
+        volumeMounts:
+          - mountPath: /run/conjur
+            name: conjur-access-token
+
+      volumes:
+        - name: conjur-access-token
+          emptyDir:
+            medium: Memory
+        - name: summon-config
+          configMap:
+            name: summon-config
